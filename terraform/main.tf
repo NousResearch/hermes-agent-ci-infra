@@ -65,9 +65,9 @@ resource "google_project_service" "iam" {
 ###############################################################################
 
 resource "google_container_cluster" "gha_runners" {
-  name             = var.cluster_name
-  location         = var.region
-  node_locations   = [var.zone]
+  name           = var.cluster_name
+  location       = var.region
+  node_locations = [var.zone]
 
   # Default node pool — runs the ARC controller, cert-manager, cache server
   # We create it as a separate node pool below so the default pool can be
@@ -75,7 +75,7 @@ resource "google_container_cluster" "gha_runners" {
   remove_default_node_pool = true
   initial_node_count       = 1
 
-  enable_ip_alias = true
+  enable_shielded_nodes = true
 
   # Required for the gke-gcloud-auth-plugin
   release_channel {
@@ -97,9 +97,9 @@ resource "google_container_cluster" "gha_runners" {
 ###############################################################################
 
 resource "google_container_node_pool" "default_pool" {
-  name       = "default-pool"
-  cluster    = google_container_cluster.gha_runners.name
-  location   = var.region
+  name           = "default-pool"
+  cluster        = google_container_cluster.gha_runners.name
+  location       = var.region
   node_locations = [var.zone]
 
   initial_node_count = 1
@@ -126,9 +126,9 @@ resource "google_container_node_pool" "default_pool" {
 ###############################################################################
 
 resource "google_container_node_pool" "spot_runners" {
-  name       = "spot-runners"
-  cluster    = google_container_cluster.gha_runners.name
-  location   = var.region
+  name           = "spot-runners"
+  cluster        = google_container_cluster.gha_runners.name
+  location       = var.region
   node_locations = [var.zone]
 
   initial_node_count = 0
