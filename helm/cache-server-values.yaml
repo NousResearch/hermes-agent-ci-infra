@@ -1,0 +1,57 @@
+# GHA Cache Server — GCS-backed
+# Deployed to arc-runners namespace alongside the runner pods
+
+replicaCount: 1
+
+config:
+  # The internal service URL — runner pods reach the cache server via ClusterIP
+  apiBaseUrl: "http://gha-cache-server-arc-runners.svc.cluster.local:3000"
+
+  # GCS storage driver
+  storage:
+    driver: gcs
+    gcs:
+      bucket: hermes-agent-github-actions-gha-cache
+
+  # SQLite for metadata (single replica, fine for our scale)
+  db:
+    driver: sqlite
+    sqlite:
+      path: /data/cache-server.db
+
+  # 7-day cache cleanup (matches GitHub's default eviction)
+  cacheCleanupOlderThanDays: 7
+
+# Still need a PVC for SQLite DB even when using GCS for blob storage
+persistentVolumeClaim:
+  enabled: true
+  accessModes:
+    - ReadWriteOnce
+  storage: 5Gi
+
+# Mount the GCS SA key as a secret
+extraVolumes:
+  - name: gcs-sa-key
+    secret:
+      secretName: gcs-cache-sa-key
+
+extraVolumeMounts:
+  - name: gcs-sa-key
+    mountPath: /etc/secrets/gcp
+    readOnly: true
+
+# Set the SA key path env var
+extraEnv:
+  - name: STORAGE_GCS_SERVICE_ACCOUNT_KEY
+    value: /etc/secrets/gcp/service-account-key
+
+# Run on the default pool (not the spot runner pool)
+nodeSelector: {}
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 1
+    memory: 2Gi

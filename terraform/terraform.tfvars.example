@@ -1,0 +1,8 @@
+# Local variables — copy to terraform.tfvars and customize.
+# Do NOT commit terraform.tfvars if it contains secrets.
+
+project_id          = "hermes-agent-github-actions"
+region              = "us-central1"
+zone                = "us-central1-a"
+cluster_name        = "gha-runners"
+github_config_url   = "https://github.com/NousResearch/hermes-agent"

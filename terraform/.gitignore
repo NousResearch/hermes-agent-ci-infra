@@ -1,0 +1,14 @@
+# Terraform + state files
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# tfvars may contain secrets
+*.tfvars
+
+# Keep the example
+!*.tfvars.example
+
+# SA key files
+*-sa-key.json

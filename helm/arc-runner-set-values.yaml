@@ -1,0 +1,41 @@
+# ARC runner scale set config for NousResearch/hermes-agent
+# Installed into namespace: arc-runners
+# References a pre-created k8s secret so the PAT never touches helm CLI args
+
+githubConfigUrl: "https://github.com/NousResearch/hermes-agent"
+
+# Use a pre-existing secret — created via kubectl, not passed via --set
+githubConfigSecret: arc-runner-github-secret
+
+# Scale to zero when idle — minRunners=0 means no pods = no cost
+# Sized for hermes-agent CI: ~35 jobs per PR, often 3-4 concurrent PRs.
+# Most jobs are short, 30 concurrent runners handles peak bursts well.
+minRunners: 0
+maxRunners: 30
+
+# dind mode — lets jobs run docker build / docker run inside the runner pod
+containerMode:
+  type: "dind"
+
+# Forked runner image — patches the runner to accept CUSTOM_ACTIONS_RESULTS_URL
+# so all cache traffic goes to our self-hosted cache server instead of GitHub's CDN.
+# Image auto-skips self-update while CUSTOM_ACTIONS_RESULTS_URL is set.
+# Repo: falcondev-oss/github-actions-runner
+template:
+  spec:
+    nodeSelector:
+      dedicated: gha-runners
+    containers:
+      - name: runner
+        image: ghcr.io/falcondev-oss/actions-runner:latest
+        command: ["/home/runner/run.sh"]
+        env:
+          - name: CUSTOM_ACTIONS_RESULTS_URL
+            value: "http://gha-cache-server-arc-runners.svc.cluster.local:3000/"
+        resources:
+          requests:
+            cpu: "1"
+            memory: "2Gi"
+          limits:
+            cpu: "2"
+            memory: "4Gi"
