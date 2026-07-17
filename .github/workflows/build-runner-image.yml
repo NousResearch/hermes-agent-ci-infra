@@ -33,7 +33,7 @@ jobs:
           context: runner
           push: true
           tags: |
-            ghcr.io/ethernet8023/actions-runner-deps:latest
-            ghcr.io/ethernet8023/actions-runner-deps:${{ github.sha }}
+            ghcr.io/nousresearch/actions-runner-deps:latest
+            ghcr.io/nousresearch/actions-runner-deps:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
