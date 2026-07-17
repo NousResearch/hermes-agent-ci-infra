@@ -27,7 +27,7 @@ template:
       dedicated: gha-runners
     containers:
       - name: runner
-        image: ghcr.io/falcondev-oss/actions-runner:latest
+        image: ghcr.io/ethernet8023/actions-runner-deps:latest
         command: ["/home/runner/run.sh"]
         env:
           - name: CUSTOM_ACTIONS_RESULTS_URL
