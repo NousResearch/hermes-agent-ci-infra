@@ -125,7 +125,7 @@ that fork. `.github/workflows/build-runner-image.yml` rebuilds and publishes bot
 `latest` and a commit-SHA tag whenever `runner/Dockerfile` changes on `main`.
 Set the repository secret `DOCKERHUB_TOKEN` to a Docker Hub access token with
 read/write access to `nousresearch/nous-gke-runner`. The workflow logs in as
-`arinnous`. Keep that Docker Hub repository
+`arinous`. Keep that Docker Hub repository
 public so GKE runner pods can pull it without an image-pull secret.
 
 The forked image auto-skips runner self-update while `CUSTOM_ACTIONS_RESULTS_URL`
