@@ -7,6 +7,7 @@ USER root
 #   - shellcheck: docker-lint workflow (exit 127)
 #   - build-essential: npm ci failing (native module compilation)
 #   - jq: js-tests workspace discovery
+#   - gh: GitHub API/Actions commands used by CI jobs
 #   - zstd: faster cache compression (recommended by cache server docs)
 #   - python3-dev + python3-venv: node-gyp needs python3 headers
 #   - python-is-python3: compatibility with tools that invoke `python`
@@ -15,6 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     shellcheck \
     build-essential \
     jq \
+    gh \
     zstd \
     python3-dev \
     python3-venv \
