@@ -27,7 +27,7 @@ template:
       dedicated: gha-runners
     containers:
       - name: runner
-        image: arilotter/nous-gke-runner:latest
+        image: nousresearch/nous-gke-runner:latest
         command: ["/home/runner/run.sh"]
         env:
           - name: CUSTOM_ACTIONS_RESULTS_URL
