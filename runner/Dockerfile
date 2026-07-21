@@ -32,4 +32,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libasound2t64 \
     && rm -rf /var/lib/apt/lists/*
 
+# Equivalent to `loginctl enable-linger runner`. Docker builds do not have a
+# running systemd login manager, so create the persistent marker it reads.
+RUN install -d -m 0755 /var/lib/systemd/linger \
+    && touch /var/lib/systemd/linger/runner
+
 USER runner
