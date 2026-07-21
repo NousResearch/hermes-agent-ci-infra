@@ -82,14 +82,17 @@ resource "google_container_cluster" "gha_runners" {
     channel = "REGULAR"
   }
 
-  workload_identity_config {
-    workload_pool = "${var.project_id}.svc.id.goog"
-  }
-
   depends_on = [
     google_project_service.container,
     google_project_service.compute,
   ]
+
+  lifecycle {
+    ignore_changes = [
+      initial_node_count,
+      remove_default_node_pool,
+    ]
+  }
 }
 
 ###############################################################################
@@ -105,8 +108,9 @@ resource "google_container_node_pool" "default_pool" {
   initial_node_count = 1
 
   autoscaling {
-    min_node_count = 1
-    max_node_count = 3
+    min_node_count  = 1
+    max_node_count  = 3
+    location_policy = "BALANCED"
   }
 
   node_config {
@@ -117,6 +121,9 @@ resource "google_container_node_pool" "default_pool" {
       "https://www.googleapis.com/auth/devstorage.read_only",
       "https://www.googleapis.com/auth/logging.write",
       "https://www.googleapis.com/auth/monitoring",
+      "https://www.googleapis.com/auth/service.management.readonly",
+      "https://www.googleapis.com/auth/servicecontrol",
+      "https://www.googleapis.com/auth/trace.append",
     ]
   }
 }
@@ -134,8 +141,9 @@ resource "google_container_node_pool" "spot_runners" {
   initial_node_count = 0
 
   autoscaling {
-    min_node_count = 0
-    max_node_count = 20
+    min_node_count  = 0
+    max_node_count  = 20
+    location_policy = "ANY"
   }
 
   node_config {
@@ -153,6 +161,52 @@ resource "google_container_node_pool" "spot_runners" {
       "https://www.googleapis.com/auth/devstorage.read_only",
       "https://www.googleapis.com/auth/logging.write",
       "https://www.googleapis.com/auth/monitoring",
+      "https://www.googleapis.com/auth/service.management.readonly",
+      "https://www.googleapis.com/auth/servicecontrol",
+      "https://www.googleapis.com/auth/trace.append",
+    ]
+  }
+}
+
+###############################################################################
+# Node Pool: spot-runners-arm64 (ARM64 runner pods, scales to zero)
+###############################################################################
+
+# ARM workloads cannot run on the existing e2-standard (amd64) pool. Keep a
+# separate T2A spot pool so only jobs explicitly routed to the ARM ARC scale
+# set cause ARM capacity to boot.
+resource "google_container_node_pool" "spot_runners_arm64" {
+  name           = "spot-runners-arm64"
+  cluster        = google_container_cluster.gha_runners.name
+  location       = var.region
+  node_locations = [var.zone]
+
+  initial_node_count = 0
+
+  autoscaling {
+    min_node_count  = 0
+    max_node_count  = 6
+    location_policy = "ANY"
+  }
+
+  node_config {
+    machine_type = "t2a-standard-4"
+    disk_size_gb = 100
+
+    spot = true
+
+    # Select this pool only from the dedicated ARM ARC scale set.
+    labels = {
+      dedicated = "gha-runners-arm64"
+    }
+
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/devstorage.read_only",
+      "https://www.googleapis.com/auth/logging.write",
+      "https://www.googleapis.com/auth/monitoring",
+      "https://www.googleapis.com/auth/service.management.readonly",
+      "https://www.googleapis.com/auth/servicecontrol",
+      "https://www.googleapis.com/auth/trace.append",
     ]
   }
 }
@@ -162,9 +216,11 @@ resource "google_container_node_pool" "spot_runners" {
 ###############################################################################
 
 resource "google_storage_bucket" "cache" {
-  name          = "${var.project_id}-gha-cache"
+  # This is the name created by the initial deployment. Keep it stable: the
+  # cache bucket contains reusable CI artifacts and must never be replaced.
+  name          = "hermes-agent-gha-cache"
   location      = var.region
-  force_destroy = true
+  force_destroy = false
 
   uniform_bucket_level_access = true
 }

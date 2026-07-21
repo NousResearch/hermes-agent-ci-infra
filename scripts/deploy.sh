@@ -163,11 +163,11 @@ if [ "$TF_ONLY" = false ]; then
   echo ""
 fi
 
-# ─── Phase 6: Runner scale set ────────────────────────────────────────────────
+# ─── Phase 6: Runner scale sets ───────────────────────────────────────────────
 
 if [ "$TF_ONLY" = false ]; then
   echo "╔══════════════════════════════════════════════════════╗"
-  echo "║  Phase 6: ARC runner scale set                      ║"
+  echo "║  Phase 6: ARC runner scale sets                     ║"
   echo "╚══════════════════════════════════════════════════════╝"
   echo ""
 
@@ -176,8 +176,13 @@ if [ "$TF_ONLY" = false ]; then
     -f "$SCRIPT_DIR/../helm/arc-runner-set-values.yaml" \
     oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set
 
+  helm upgrade --install arc-runner-arm64 \
+    --namespace arc-runners \
+    -f "$SCRIPT_DIR/../helm/arc-runner-arm64-values.yaml" \
+    oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set
+
   echo ""
-  echo "✓ Runner scale set deployed"
+  echo "✓ amd64 and ARM64 runner scale sets deployed"
   echo ""
 fi
 
@@ -189,7 +194,8 @@ echo "╚═══════════════════════�
 echo ""
 echo "Cluster:    $CLUSTER_NAME ($REGION)"
 echo "Project:    $PROJECT_ID"
-echo "Runners:    arc-runner-set (scales 0→30)"
+echo "Runners:    arc-runner-set (amd64, scales 0→30)"
+echo "            arc-runner-arm64 (ARM64, scales 0→6)"
 echo "Cache:      GCS-backed cache server"
 echo ""
 echo "Verify:"
@@ -198,3 +204,4 @@ echo "  kubectl get pods -n arc-runners"
 echo ""
 echo "Use in workflows:"
 echo "  runs-on: arc-runner-set"
+echo "  # ARM64 jobs: runs-on: arc-runner-arm64"

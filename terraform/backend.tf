@@ -1,9 +1,8 @@
-# Terraform state — local for simplicity.
-# For team use, switch to a GCS backend:
-#
-# terraform {
-#   backend "gcs" {
-#     bucket = "hermes-agent-ci-infra-tfstate"
-#     prefix = "terraform/state"
-#   }
-# }
+# Shared, versioned state. The bucket is bootstrapped once with gcloud because
+# Terraform cannot use a backend bucket before that backend exists.
+terraform {
+  backend "gcs" {
+    bucket = "hermes-agent-github-actions-tfstate"
+    prefix = "terraform/state"
+  }
+}

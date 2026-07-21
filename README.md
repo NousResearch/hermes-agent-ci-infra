@@ -11,6 +11,8 @@ GKE cluster (gha-runners, us-central1)
 │   └── ARC controller, cert-manager, cache server
 ├── spot-runners pool (e2-standard-4, 0-20 nodes, spot)
 │   └── ephemeral runner pods (one per job, scale to zero when idle)
+├── spot-runners-arm64 pool (t2a-standard-4, 0-6 nodes, spot)
+│   └── ARM64 runner pods (one per job, scale to zero when idle)
 │
 ├── arc-systems namespace
 │   ├── ARC controller (operator)
@@ -72,6 +74,9 @@ In any workflow in NousResearch/hermes-agent:
 jobs:
   test:
     runs-on: arc-runner-set
+
+  arm-test:
+    runs-on: arc-runner-arm64
 ```
 
 ## Repo structure
@@ -85,6 +90,7 @@ hermes-agent-ci-infra/
 │   └── .gitignore
 ├── helm/
 │   ├── arc-runner-set-values.yaml     # Runner scale set (dind, forked image, cache URL)
+│   ├── arc-runner-arm64-values.yaml   # ARM64 runner scale set (dind, cache URL)
 │   └── cache-server-values.yaml        # GCS-backed cache server
 ├── scripts/
 │   └── deploy.sh                 # Full deploy script (terraform + helm)
@@ -97,9 +103,10 @@ hermes-agent-ci-infra/
 
 | Resource | Description |
 |---|---|
-| `google_container_cluster.gha_runners` | GKE cluster (Standard mode, Workload Identity enabled) |
+| `google_container_cluster.gha_runners` | GKE cluster (Standard mode) |
 | `google_container_node_pool.default_pool` | e2-standard-2, 1-3 nodes (controller + system) |
 | `google_container_node_pool.spot_runners` | e2-standard-4, 0-20 nodes, spot (runner pods) |
+| `google_container_node_pool.spot_runners_arm64` | t2a-standard-4, 0-6 nodes, spot (ARM64 runner pods) |
 | `google_storage_bucket.cache` | GCS bucket for actions cache |
 | `google_service_account.cache_server` | SA with storage.objectAdmin on the cache bucket |
 
@@ -110,6 +117,7 @@ hermes-agent-ci-infra/
 | cert-manager (v1.15.1) | cert-manager | TLS for ARC webhooks |
 | gha-runner-scale-set-controller (v0.14.2) | arc-systems | ARC operator |
 | gha-runner-scale-set (v0.14.2) | arc-runners | Runner scale set (dind, 0-30 runners) |
+| gha-runner-scale-set (v0.14.2) | arc-runners | ARM64 runner scale set (dind, 0-6 runners) |
 | github-actions-cache-server (v1.1.0) | arc-runners | GCS-backed cache server |
 
 ### Runner image
@@ -123,6 +131,8 @@ The deployable image is `nousresearch/nous-gke-runner:latest` on Docker Hub. It 
 `shellcheck`, compiler tools, `jq`, `zstd`, and Python development tools on top of
 that fork. `.github/workflows/build-runner-image.yml` rebuilds and publishes both
 `latest` and a commit-SHA tag whenever `runner/Dockerfile` changes on `main`.
+The published tag is a multi-architecture manifest for both `linux/amd64` and
+`linux/arm64`.
 Set the repository secret `DOCKERHUB_TOKEN` to a Docker Hub access token with
 read/write access to `nousresearch/nous-gke-runner`. The workflow logs in as
 `arinous`. Keep that Docker Hub repository

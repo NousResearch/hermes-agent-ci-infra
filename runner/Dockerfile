@@ -9,6 +9,8 @@ USER root
 #   - jq: js-tests workspace discovery
 #   - zstd: faster cache compression (recommended by cache server docs)
 #   - python3-dev + python3-venv: node-gyp needs python3 headers
+#   - python-is-python3: compatibility with tools that invoke `python`
+#   - xvfb + Electron libraries: desktop Playwright E2E on ARC
 RUN apt-get update && apt-get install -y --no-install-recommends \
     shellcheck \
     build-essential \
@@ -16,6 +18,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     zstd \
     python3-dev \
     python3-venv \
+    python-is-python3 \
+    xvfb \
+    libgtk-3-0 \
+    libnotify4 \
+    libnss3 \
+    libxss1 \
+    libxtst6 \
+    xdg-utils \
+    libatspi2.0-0 \
+    libdrm2 \
+    libgbm1 \
+    libasound2t64 \
     && rm -rf /var/lib/apt/lists/*
 
 USER runner

@@ -1,0 +1,37 @@
+# ARM64 ARC runner scale set for NousResearch/hermes-agent.
+# Installed beside the amd64 set in namespace: arc-runners.
+# The scale-set name is the GitHub Actions runner label used by ARM jobs.
+
+runnerScaleSetName: arc-runner-arm64
+
+githubConfigUrl: "https://github.com/NousResearch/hermes-agent"
+githubConfigSecret: arc-runner-github-secret
+
+# ARM jobs are currently Docker's arm64 lane. Keep this elastic and separate
+# from the amd64 pool so it scales to zero independently.
+minRunners: 0
+maxRunners: 6
+
+containerMode:
+  type: "dind"
+
+template:
+  spec:
+    nodeSelector:
+      dedicated: gha-runners-arm64
+      kubernetes.io/arch: arm64
+    containers:
+      - name: runner
+        # Multi-architecture manifest: Kubernetes selects the arm64 image.
+        image: nousresearch/nous-gke-runner:latest
+        command: ["/home/runner/run.sh"]
+        env:
+          - name: CUSTOM_ACTIONS_RESULTS_URL
+            value: "http://gha-cache-server-arc-runners.svc.cluster.local:3000/"
+        resources:
+          requests:
+            cpu: "1"
+            memory: "2Gi"
+          limits:
+            cpu: "2"
+            memory: "4Gi"
