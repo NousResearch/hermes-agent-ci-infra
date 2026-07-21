@@ -20,6 +20,11 @@ template:
     nodeSelector:
       dedicated: gha-runners-arm64
       kubernetes.io/arch: arm64
+    tolerations:
+      - key: kubernetes.io/arch
+        operator: Equal
+        value: arm64
+        effect: NoSchedule
     containers:
       - name: runner
         # Multi-architecture manifest: Kubernetes selects the arm64 image.
