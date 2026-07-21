@@ -119,6 +119,14 @@ GitHub Actions runner that patches the binary to accept `CUSTOM_ACTIONS_RESULTS_
 This env var redirects all `actions/cache` traffic to our self-hosted cache server
 instead of GitHub's CDN, keeping cache reads/writes inside the cluster network.
 
+The deployable image is `arilotter/nous-gke-runner:latest` on Docker Hub. It adds
+`shellcheck`, compiler tools, `jq`, `zstd`, and Python development tools on top of
+that fork. `.github/workflows/build-runner-image.yml` rebuilds and publishes both
+`latest` and a commit-SHA tag whenever `runner/Dockerfile` changes on `main`.
+Set the repository secret `DOCKERHUB_TOKEN` to a Docker Hub access token with
+read/write access to `arilotter/nous-gke-runner`. Keep that Docker Hub repository
+public so GKE runner pods can pull it without an image-pull secret.
+
 The forked image auto-skips runner self-update while `CUSTOM_ACTIONS_RESULTS_URL`
 is set. You must still update the image periodically (GitHub requires runners
 to stay within ~30 days of the latest release).
