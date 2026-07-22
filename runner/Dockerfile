@@ -8,6 +8,7 @@ USER root
 #   - build-essential: npm ci failing (native module compilation)
 #   - jq: js-tests workspace discovery
 #   - gh: GitHub API/Actions commands used by CI jobs
+#   - man-db + manpages: command grammar exercised by approval-parser tests
 #   - zstd: faster cache compression (recommended by cache server docs)
 #   - python3-dev + python3-venv: node-gyp needs python3 headers
 #   - python-is-python3: compatibility with tools that invoke `python`
@@ -17,6 +18,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     jq \
     gh \
+    man-db \
+    manpages \
     zstd \
     python3-dev \
     python3-venv \
@@ -32,6 +35,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libdrm2 \
     libgbm1 \
     libasound2t64 \
+    && rm -rf /var/lib/apt/lists/*
+
+# The base runner image excludes manual pages. Restore them before installing
+# man-db so parser integration tests run against the same man implementation
+# and page set as GitHub's Ubuntu runners.
+RUN sed -i '/^path-exclude=\/usr\/share\/man\/\*/d' /etc/dpkg/dpkg.cfg.d/excludes \
+    # The base image's diversion points at a stripped target, so remove its
+    # metadata without renaming before the man-db reinstall restores /usr/bin/man.
+    && dpkg-divert --quiet --remove --no-rename /usr/bin/man \
+    && apt-get update \
+    && apt-get install --reinstall -y --no-install-recommends coreutils man-db manpages \
+    && rm -f /etc/update-motd.d/60-unminimize \
     && rm -rf /var/lib/apt/lists/*
 
 # Equivalent to `loginctl enable-linger runner`. Docker builds do not have a
