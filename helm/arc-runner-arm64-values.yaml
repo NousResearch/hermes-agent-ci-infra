@@ -35,8 +35,8 @@ template:
             value: "http://gha-cache-server-arc-runners.svc.cluster.local:3000/"
         resources:
           requests:
-            cpu: "1"
-            memory: "2Gi"
-          limits:
             cpu: "2"
-            memory: "4Gi"
+            memory: "8Gi"
+          limits:
+            cpu: "4"
+            memory: "16Gi"
